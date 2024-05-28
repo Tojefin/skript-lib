@@ -1,0 +1,13 @@
+# ============================
+# Настройка MOTD
+# ============================
+on server list ping:
+	set the motd to "%gradient("&lEverlasting friends", ("22c1c3", "fdbb2d"))% %nl%&7[1.20.1] "
+	set the fake max players count to 0
+
+# ============================
+# Сообщения для игрока при входе
+# ============================
+on join:
+	wait 5 second
+	send component mini message from "%nl%<dark_green><bold>■</bold> <aqua>Добро пожаловать на <gradient:##22c1c3:##fdbb2d><bold>Everlasting friends</bold></gradient>%nl% <aqua>➥<gray> Меню открывается сочетанием <white><bold><key:key.sneak> + <key:key.swapOffhand></bold>%nl%" to player

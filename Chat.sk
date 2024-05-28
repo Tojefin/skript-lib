@@ -1,0 +1,278 @@
+# Необходимые аддоны
+# SkBee - https://www.spigotmc.org/resources/skbee-skript-addon.75839/
+# Для работы с текстовыми компанентами
+# ============================
+
+options:
+	useLocalChat: false
+
+# ============================
+# Функции блокировки чата
+# ============================
+function chatinput(p: player):
+	set {-chat.input.%{_p}%} to true
+
+function chatblock(p: player):
+	if {-chat.block.%{_p}%} is true:
+		delete {-chat.block.%{_p}%}
+	else:
+		set {-chat.block.%{_p}%} to true
+
+# ============================
+# Функция проверки на спам
+# ============================
+function antispam(msg: text, p: player) :: boolean:
+	if {-chat.lmsg::%{_p}%} is {_msg}:
+		send title "" with subtitle "&c%{_p}% не спамь" to {_p}
+		return true
+	if difference between {-chat.lt::%{_p}%} and now is less than 2 real second:
+		send title "" with subtitle "&c%{_p}% не спамь" to {_p}
+		return true
+
+# ============================
+# Изменение сообщений от игроков в чате
+# ============================
+on chat:
+	cancel event
+
+	if {-chat.input.%player%} is true:
+		set {-chat.input.%player%} to message
+		stop
+	if {-chat.block.%player%} is true:
+		stop
+
+	send {-chat.block.%player%} to player
+
+	set {_p} to {nick.%player%} ? player
+	set {_w} to player's world
+	set {_msg} to message
+	set {_check} to the first characters of {_msg}
+
+	# Анти спам
+	# if antispam({_msg}, player) is true:
+	# 	stop
+
+	# Проверка на глобальное сообщение
+	if {@useLocalChat} is true:
+		if {_check} is "!":
+			if length of message > 1:
+				set {_msg} to subtext of {_msg} from characters 2 to (length of message)
+			else:
+				stop
+	else:
+		delete {_check}
+
+	# Парсинг сообщения
+	set {_msg::*} to parseMsg({_msg}, player, {_check})
+
+	# Название миров
+	if {_w} is "world":
+		set {_formW} to "&a☀ Верхний"
+	if {_w} is "world_nether":
+		set {_formW} to "&c☠ Ад"
+	if {_w} is "world_the_end":
+		set {_formW} to "&d⭐ Край"
+	
+	if {_w} is "world" or "world_nether" or "world_the_end":
+		if {@useLocalChat} is true:
+			if {_check} is "!":
+				send "[%{_w}%] [G] %{_p}% → %message%" to console
+
+				set {_t} to text component from "&f%{_p}%&e&l:&r "
+				set click event of {_t} to click event to suggest command "/pm %player% "
+				set hover event of {_t} to hover event showing "&e⌚ &8> &7%now formatted as "HH:mm:ss"% %nl%&eМир &8> %{_formW}%"
+
+				loop all players:
+					if {_msg} contain "@%loop-player%":
+						play sound "minecraft:entity.arrow.hit_player" to loop-player
+						loop {_msg::*}:
+							if "%loop-value-2%" contain "@":
+								set color format of {_msg::%loop-index%} to yellow
+								send component merge components {_t} and {_msg::*} to loop-player
+								set color format of {_msg::%loop-index%} to white
+								continue
+
+					send component merge components {_t} and {_msg::*} to loop-player
+
+			else:
+				send "[%{_w}%] [L] %{_p}% → %message%" to console
+
+				set {_t} to text component from "&f%{_p}%&8&l:&r &f"
+				set click event of {_t} to click event to suggest command "/pm %player% "
+				set hover event of {_t} to hover event showing "&e⌚ &8> &7%now formatted as "HH:mm:ss"%"
+
+				loop all players:
+					if distance between the player and loop-player > 100:
+						continue
+
+					if {_msg} contain "@%loop-player%":
+						play sound "minecraft:entity.arrow.hit_player" to loop-player
+						loop {_msg::*}:
+							if "%loop-value-2%" contain "@":
+								set color format of {_msg::%loop-index%} to yellow
+								send component merge components {_t} and {_msg::*} to loop-player
+								set color format of {_msg::%loop-index%} to white
+								continue
+
+					send component merge components {_t} and {_msg::*} to loop-player
+
+		else:
+			send "[%{_w}%] %{_p}% → %message%" to console
+
+			set {_t} to text component from "&f%{_p}%&8&l:&r &f"
+			set click event of {_t} to click event to suggest command "/pm %player% "
+			set hover event of {_t} to hover event showing "&e⌚ &8> &7%now formatted as "HH:mm:ss"% %nl%&eМир &8> %{_formW}%"
+
+			loop all players:
+				if {_msg} contain "@%loop-player%":
+					play sound "minecraft:entity.arrow.hit_player" to loop-player
+					loop {_msg::*}:
+						if "%loop-value-2%" contain "@":
+							set color format of {_msg::%loop-index%} to yellow
+							send component merge components {_t} and {_msg::*} to loop-player
+							set color format of {_msg::%loop-index%} to white
+							continue
+
+				send component merge components {_t} and {_msg::*} to loop-player
+
+
+			# Проверка на получение сообщения
+			# 	if loop-player is not player: 
+			# 		set {_get} to true
+			# if {_get} is not set:
+			# 	send action bar "&c&l■ &7Вас никто не услышал. &e! &7глобальное сообщение" to player
+
+	# ============================
+	# Голос при отправке сообщений
+	# ============================
+	set {_l} to player's location
+	set {_p} to length of player's name / 8
+	play sound "entity.villager.ambient" in voice category with pitch {_p} at {_l}
+
+	set {-chat.lmsg::%player%} to message
+	set {-chat.lt::%player%} to now
+
+# ============================
+# Функция парсинга сообщений на ссылки предметы упоминания и координаты
+# ============================
+function parseMsg(msg: string, p: player, global: string) :: text components:
+	set {_words::*} to split {_msg} at " "
+	loop {_words::*}:
+		if loop-value contain "https://" or "http://":
+			set {_words::%loop-index%} to text component from "&b&n%loop-value%&r "
+			set click event of {_words::%loop-index%} to click event to open link "%loop-value%"
+
+		else if loop-value is "*tool" or "*hand" or "*item" or "*предмет" or "*рука":
+			if name of {_p}'s tool is set:
+				set {_words::%loop-index%} to text component from "&n%coloured name of {_p}'s tool%&r "
+			else:
+				set {_words::%loop-index%} to text component from "&b[Предмет]&r "
+			set hover event of {_words::%loop-index%} to a new hover event showing {_p}'s tool
+
+		else if loop-value contain "@":
+			set {_t} to subtext of loop-value from characters 2 to (length of loop-value)
+			set {_words::%loop-index%} to text component from "%loop-value%&r "
+			set click event of {_words::%loop-index%} to click event to suggest command "/w %{_t}% "
+
+		else if loop-value contain "*loc" or "*location" or "*cord" or "*корды" or "*координаты":
+			set {_words::%loop-index%} to text component from "&8[&7XYZ:&f %{_p}'s x-pos% %{_p}'s y-pos% %{_p}'s z-pos%&8] "
+
+		else:
+			if {_global} is "!":
+				set {_words::%loop-index%} to text component from "&7%loop-value% "
+			else:
+				set {_words::%loop-index%} to text component from "&f%loop-value% "
+	return {_words::*}
+
+# ============================
+# Команда игнора личных сообщений
+# ============================
+command /ignor:
+	trigger:
+		if {-pm::ignor::%player%} is not set:
+			set {-pm::ignor::%player%} to true
+			send "&c&l■ &7Теперь вам не могут писать" to player
+		else:
+			delete {-pm::ignor::%player%}
+			send "&a&l■ &7Теперь вам могут писать" to player
+
+# ============================
+# Личные сообщения
+# ============================
+command /pm [<offline player>] [<text>]:
+	aliases: /msg, /tell, /w, /whisper, /m
+	trigger:
+
+		# Анти спам
+		# if antispam({_msg}, player) is true:
+		# 	stop
+
+		if arg 1 is not set:
+			send "&7/m Игрок Сообщение" to player
+			stop
+		if arg 1 is player:
+			send "&7Эмммм ладно я этого не видел."
+			stop
+		if arg 1 is offline:
+			send "&7%arg 1% не в сети" to player
+			stop
+		if arg 2 is not set:
+			send "&7А где текст?" to player
+			stop
+
+		if arg 1 is online:
+			if {-pm::ignor::%arg 1%} is set:
+				send "&c&l■ &f%arg 1% &7отключил личные сообщения"
+				stop
+			else:
+				send "&fВы &l&8→ &f%arg 1%&8: &f%arg 2%" to player
+				set {_t} to text component from "&f%player% &l&8→ &fВам&8: "
+				set hover event of {_t} to hover event showing "&e⌚ &8> &7%now formatted as "HH:mm:ss"%"
+				set click event of {_t} to click event to suggest command "/w %player% "
+				send component {_t} and parseMsg(arg 2, player, "!") to arg 1
+				set {-pms.reply.%arg 1%} to player
+				set {-chat.lmsg::%player%} to arg 2
+				set {-chat.lt::%player%} to now
+
+# ============================
+# Команда для ответа на личное сообщение
+# ============================
+command /reply [<text>]:
+	aliases: /r
+	trigger:
+
+		# Анти спам
+		# if antispam({_msg}, player) is true:
+		# 	stop
+
+		if arg 1 is not set:
+			send "&7/r Сообщение" to player
+			stop
+		if {-pms.reply.%player%} is not set:
+			send "&7Вам некому ответить" to player
+			stop
+
+		if {-pms.reply.%player%} is set:
+			if {-pm::ignor::%{pms.reply.%player%}%} is set:
+				send "&c&l■ &f%{pms.reply.%player%}% &7отключил личные сообщения"
+				stop
+			else:
+				send "&fВы &l&8→ &f%{-pms.reply.%player%}%&8: &f%arg 1%" to player
+				set {_t} to text component from "&f%player% &l&8→ &fВам&8: "
+				set hover event of {_t} to hover event showing "&e⌚ &8> &7%now formatted as "HH:mm:ss"%"
+				set click event of {_t} to click event to suggest command "/w %player% "
+				send component {_t} and parseMsg(arg 1, player, "!") to {-pms.reply.%player%}
+				set {-pms.reply.%{-pms.reply.%player%}%} to player
+				set {-chat.lmsg::%player%} to arg 1
+				set {-chat.lt::%player%} to now
+
+# ============================
+# Очистка инфы о игроке
+# ============================
+on quit:
+	delete {-pms.reply.%player%}
+	delete {-pm::ignor.%player%}
+	delete {-chat.lmsg::%player%} 
+	delete {-chat.lt::%player%}
+	delete {-chat.block.%player%}
+	delete {-chat.input.%player%}

@@ -1,0 +1,138 @@
+on load:
+	delete {tpa.ping}
+	delete {tpa.ping::*}
+
+function tpa(p: player, t: player):
+	set {_price} to floor(distance between {_p} and {_t} / 100)
+	send "%{_p}% запросил телепортация к %{_t}% за %{_price}%" to console
+
+	if {_t} is {_p}:
+		send "%nl%&c&l■ &bTPaccept %nl% &b➥ &7Раздвоение личности оно такое%nl%" to {_p}
+		stop
+	if {_t} is not online:
+		send "%nl%&c&l■ &bTPaccept %nl% &b➥ &a%{_t}% &7не онлайн%nl%" to {_p}
+		stop
+	if {tpa.acc::%{_t}%} is set:
+		send "%nl%&c&l■ &bTPaccept %nl% &b➥ &a%{_t}% &7отключил приём запросов%nl%" to {_p}
+		stop
+	if {_p}'s world is not {_t}'s world:
+		send "%nl%&c&l■ &bTPaccept %nl% &b➥ &a%{_t}% &7В другом мире%nl%" to {_p}
+		stop
+
+	if {_p} do not have {_price} of amethyst shard:
+		send "%nl%&c&l■ &bTPaccept %nl% &b➥ &7У вас не достаточно осколков аметиста%nl%" to {_p}
+		stop
+
+	set {tpa.ping::%{_t}%} to {_p}
+	send "%nl%&e&l■ &bTPaccept %nl% &b➥ &7Ожидайте ответа &a%{_t}%%nl%" to {_p} 
+	send "%nl%&e&l■ &bTPaccept %nl% &b➥ &a%{_p}% &7хочет переместиться к вам%nl%    <command:/tpaY>&7[&a✔ &fПринять&7]    <command:/tpaN>&7[&c❌ &fОтклонить&7]%nl%" to {_t}
+	wait 20 real second
+	if {tpa.ping::%{_t}%} is {_p}:
+		send "%nl%&c&l■ &bTPaccept %nl% &b➥ &a%{_t}% &7не ответил%nl%" to {_p}
+		delete {tpa.ping::%{_t}%}
+
+command /tpa [<offlineplayer>]:
+	executable by: player
+	trigger:
+		if arg 1 is not set:
+			send "%nl%&e&l■ &bTPaccept %nl% <sgt:/tpa >&b➥ &7&n/tpa <имя> &7- Тп к игроку%nl% <sgt:/tpa x>&b➥ &7&n/tpa x &7- Переключить приём запросов%nl%" to player
+		else if arg 1 is set:
+			if arg 1 is "x":
+				if {tpa.acc::%player%} is not set:
+					set {tpa.acc::%player%} to false
+					send "%nl%&2&l■ &bTPaccept %nl% &b➥ &7Вы &aвключили &7приём запросов%nl%" to player
+				else if {tpa.acc::%player%} is false:
+					delete {tpa.acc::%player%}
+					send "%nl%&2&l■ &bTPaccept %nl% &b➥ &7Вы &aотключили &7приём запросов%nl%" to player
+				stop
+			else:
+				tpa(player, arg 1)
+
+command /tpaY:
+	executable by: player
+	trigger:
+		if {tpa.ping::%player%} is set:
+			set {_price} to floor(distance between player and {tpa.ping::%player%}'s location / 100)
+			if {tpa.ping::%player%} do not have {_price} of amethyst shard:
+				send "%nl%&c&l■ &bTPaccept %nl% &b➥ &7У &2%{tpa.ping::%player%}% не достаточно осколков аметиста%nl%" to player
+				send "%nl%&c&l■ &bTPaccept %nl% &b➥ &7У вас не достаточно осколков аметиста%nl%" to {tpa.ping::%player%}
+				stop
+
+			send "%nl%&2&l■ &bTPaccept %nl% &b➥ &7Вы приняли перемещение %{tpa.ping::%player%}%%nl%" to player
+			teleport {tpa.ping::%player%} to player
+			remove {_price} of amethyst shard from {tpa.ping::%player%}'s inventory
+			delete {tpa.ping::%player%}
+		else:
+			send "%nl%&c&l■ &bTPaccept %nl% &b➥ &7К вам нет запросов%nl%" to player
+
+command /tpaN:
+	executable by: player
+	trigger:
+		if {tpa.ping::%player%} is set:
+			send "%nl%&2&l■ &bTPaccept %nl% &b➥ &7Вы отклонили перемещение %{tpa.ping::%player%}%%nl%" to player
+			send "%nl%&c&l■ &bTPaccept %nl% &b➥ &7%player% отклонил перемещение%nl%" to {tpa.ping::%player%}
+			delete {tpa.ping::%player%}
+		else:
+			send "%nl%&c&l■ &bTPaccept %nl% &b➥ &7К вам нет запросов%nl%" to player
+
+function openTeleportMenu(p: player):
+	set {_shape::1} to "asdfghjkl"
+	set {_shape::2} to "qwertyuio"
+	set {_shape::3} to "123456789"
+	set {_shape::4} to "0_+=!~`$^"
+	set {_shape::5} to "<---.--->"
+	create a gui with virtual chest with 5 rows named "Телепортация к игроку" and shape {_shape::*}:
+		make gui slot "-" with black glass pane named "&7"
+		make gui slot "." with red concrete named "&aНазад":
+			if gui click type is left mouse:
+				openMenu({_p})
+
+		if {-menuTPA::page::%{_p}%} is not set:	
+			set {-menuTPA::page::%{_p}%} to 1
+
+		loop all players:
+			if loop-player is {_p}:
+				continue
+			add 1 to {_loop-index}
+			set {_page} to floor({_loop-index} parsed as number/36)+1
+			add loop-value to {_list::%{_page}%::*}
+
+		loop {_list::%{-menuTPA::page::%{_p}%}%::*}:
+			set {_slot} to loop-index parsed as number - 1
+			set {_looped::%{_slot}%} to loop-value
+
+			set {_head} to loop-value's skull
+
+			if loop-value is in "world":
+				set {_w} to "&aВерхний мир"
+			if loop-value is in "world_nether":
+				set {_w} to "&cАд"
+			if loop-value is in "world_the_end":
+				set {_w} to "&5Край"
+			if {_w} is not set:
+				set {_w} to "&k%loop-value's world%"
+
+			set {_price} to floor(distance between {_p} and loop-value / 100)
+
+			make gui slot {_slot} with {_head} with lore "&fМир&8: &f%{_w}%", "&fОсколоков аметиста&8: &d%{_price}% &f", "" and "&aЛКМ &7- &fзапросить телепорт" named "&f%loop-value%":
+				if gui click type is left mouse:
+					tpa({_p}, {_looped::%{_slot}%})
+
+		if {_page} > {-menuTPA::page::%{_p}%}:
+			make gui slot ">" with map named "&aСтраница %{-menuTPA::page::%{_p}%}+1%":
+				if gui click type is left mouse:
+					set {-menuTPA::page::%{_p}%} to {-menuTPA::page::%{_p}%}+1
+					openTeleportMenu({_p})
+		else:
+			make gui slot ">" with black glass pane named "&7"
+
+		if {-menuTPA::page::%{_p}%} > 1:
+			make gui slot "<" with map named "&aСтраница %{-menuTPA::page::%{_p}%}-1%":
+				if gui click type is left mouse:
+					set {-menuTPA::page::%{_p}%} to {-menuTPA::page::%{_p}%}-1
+					openTeleportMenu({_p})
+		else:
+			make gui slot "<" with black glass pane named "&7"
+
+	open created gui for {_p}
+	send "%{_p}% открыл меню телепортации к игрокам" to console

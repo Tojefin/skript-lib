@@ -1,0 +1,2 @@
+on spawn of phantom:
+  cancel event

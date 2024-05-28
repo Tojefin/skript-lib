@@ -1,0 +1,65 @@
+# Необходимые аддоны
+# SkBee - https://www.spigotmc.org/resources/skbee-skript-addon.75839/
+# Для работы с NBT и рецептами
+
+# Регистрация рецепта
+on load:
+  register new shaped recipe for getInvisFrame() using glass, glass, glass, glass, item frame, glass, glass, glass and glass with id "tojefin:invis_frame"
+
+# Выдача рецепта
+on craft of item frame:
+  unlock recipe "tojefin:invis_frame" for player
+on pick up of item frame:
+  unlock recipe "tojefin:invis_frame" for player
+
+# Функция генирации предмета рамки
+function getInvisFrame() :: item:
+  set {_item} to item frame with nbt compound from "{EntityTag:{Invisible:1b},HideFlags:1}"
+  set enchantments of {_item} to unbreaking 1
+  return {_item}
+
+# Настройка поведения при разных событиях
+on place a item frame:
+  wait 1 tick
+  loop all entities in radius 0.1 of location:
+    if loop-entity is item frame:
+      set {_frame} to loop-entity
+  if "%nbt compound of {_frame}%" contain "Invisible:1b":
+    set tag "custom;isInvis:1b" of nbt compound of {_frame} to "1"
+    set visibility of {_frame}  to true
+    set glowing of {_frame} to true
+
+on rightclick on item frame:
+  if player's tool is air:
+    stop
+  if "%nbt compound of event-entity%" contain "isInvis:1b":
+    if visibility of event-entity is true:
+      set {_frame} to event-entity
+      set visibility of {_frame}  to false
+      set glowing of {_frame} to false
+
+on damage of item frame:
+  if "%nbt compound of victim%" contain "isInvis:1b":
+    if visibility of victim is false:
+      set {_frame} to victim
+      set visibility of {_frame}  to true
+      set glowing of {_frame} to true
+
+on break of item frame:
+  loop all entities in radius 0.1 of location:
+    if loop-entity is item frame:
+      set {_frame} to loop-entity
+  if "%nbt compound of {_frame}%" contain "Invisible:1b" or "isInvis:1b":
+    cancel event
+    play sound "minecraft:entity.glow_item_frame.break" at event-location
+    kill {_frame}
+    drop getInvisFrame()
+
+# Команда
+command /invisframe [<player>]:
+  permission: "admin"
+  trigger:
+    if arg 1 is set:
+      give getInvisFrame() to arg 1
+    else:
+      give getInvisFrame() to player

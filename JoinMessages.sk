@@ -1,0 +1,30 @@
+# Необходимые аддоны
+# SkBee - https://www.spigotmc.org/resources/skbee-skript-addon.75839/
+# Для работы с текстовыми компанентами
+
+# ============================
+# Сообщения о входе и выходе
+# ============================
+on join:
+	set join message to ""
+	set {_t} to text component from "&a&l+ &7%player%"
+	set hover event of {_t} to hover event showing "&e⌚ &8> &7%now formatted as "HH:mm:ss"%"
+	set click event of {_t} to click event to suggest command "/pm %player% "
+	send component {_t} to all players
+	send "&a&l+ &7%player%" to console
+	stop
+on first join:
+	set join message to ""
+	set {_t} to text component from "&6&oNew &7%player%"
+	set hover event of {_t} to hover event showing "&e⌚ &8> &7%now formatted as "HH:mm:ss"%"
+	set click event of {_t} to click event to suggest command "/pm %player% "
+	send component {_t} to all players
+	send "&6&oNew &7%player%" to console
+	stop
+on quit:
+	set quit message to ""
+	set {_t} to text component from "&c&l- &7%player%"
+	set hover event of {_t} to hover event showing "&e⌚ &8> &7%now formatted as "HH:mm:ss"%"
+	send component {_t} to all players
+	send "&c&l- &7%player%" to console
+	stop

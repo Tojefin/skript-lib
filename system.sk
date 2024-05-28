@@ -1,0 +1,18 @@
+command /disable [<number>] [<text>]:
+	permission: "admin"
+	trigger:
+		if arg 1 is set:
+			set {_sec} to arg 1
+		else:
+			set {_sec} to 60
+		send "&e&l■ &r&fВыключение сервера через &e%{_sec}% &fсек!" to all players
+		while {_sec} > 0:
+			send title "&k" with subtitle "&fВыключение через &e%{_sec}% &fсек" to all players
+			send "Выключение через &e%{_sec}% &fсек" to console
+			wait 1 real seconds
+			remove 1 from {_sec}
+		set {_reason} to arg 2 ? "Перезапускаю..."
+		kick all players due to "&a&l■ &f%{_reason}%"
+		wait 1 second
+		execute console command "stop"
+		

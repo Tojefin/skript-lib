@@ -1,0 +1,129 @@
+on connect:
+	set {_reason} to "вас нет в списке игроков"
+	loop {privateserver.players::*}:
+		if loop-value's name in lowercase is player's name in lowercase:
+			if {privateserver.kicked.%player%} is false:
+				set {_pass} to true
+			else:
+				set {_reason} to "вас заблокировали"
+	if {_pass} is not true:
+		kick player due to "&e&l■ &bPrivate Server &8- &f%{_reason}%"
+
+
+command /players [<text>] [<offlineplayer>] [<text>]:
+	permission: "admin"
+	trigger:
+		if arg 1 is not set:
+			send "%nl%&e&l■ &bPrivate Server %nl% &b➥ &7Система приватного сервера %nl% &b➥ &7/players add [target] [inviter]%nl% &b➥ &7/players block [target]%nl% &b➥ &7/players list%nl%"
+		
+		# add
+		if arg 1 is "add":
+			if arg 2 is not set:
+				stop
+			if arg 3 is not set:
+				stop
+			if {privateserver.players::*} contain arg 2:
+				send "%nl%&e&l■ &bPrivate Server %nl% &b➥ &7%arg 2% уже есть в игроках%nl%"
+				stop
+			if {privateserver.kicked.%arg 2%} is true:
+				set {privateserver.kicked.%arg 2%} to false
+				send "%nl%&e&l■ &bPrivate Server %nl% &b➥ &7%arg 2% разблокирован%nl%"
+				stop
+			
+			add arg 2 to {privateserver.players::*}
+			set {privateserver.invited.%arg 2%} to arg 3
+			set {privateserver.kicked.%arg 2%} to false
+			send "%nl%&e&l■ &bPrivate Server %nl% &b➥ &7%arg 2% добавлен в список игроков%nl%"
+
+		# block
+		if arg 1 is "block":
+			if arg 2 is not set:
+				stop
+			if {privateserver.players::*} contain arg 2:
+				set {privateserver.kicked.%arg 2%} to true
+				send "%nl%&e&l■ &bPrivate Server %nl% &b➥ &7%arg 2% заблокирован%nl%"
+
+		# delete
+		if arg 1 is "delete":
+			if arg 2 is not set:
+				stop
+			if {privateserver.players::*} contain arg 2:
+				remove arg 2 from {privateserver.players::*}
+				delete {privateserver.invited.%arg 2%}
+				delete {privateserver.kicked.%arg 2%}
+				send "%nl%&e&l■ &bPrivate Server %nl% &b➥ &7%arg 2% удалён из списка игроков%nl%"
+
+		# list
+		if arg 1 is "list":
+			send "%nl%&e&l■ &bPrivate Server %nl% &b➥ &7Список игроков:%nl%"
+			loop {privateserver.players::*}:
+				if {privateserver.kicked.%loop-value%} is true:
+					set {_kicked} to "&c"
+				else:
+					set {_kicked} to "&a"
+				set {_inviter} to {privateserver.invited.%loop-value%}
+				
+				send "%{_kicked}%%loop-index%&r. &f%loop-value% &8(&7%{_inviter}%&8) [&7%loop-value's first login formatted as "dd/MM/yyyy HH:mm:ss z"%&8]"
+
+		#reload
+		if arg 1 is "reload":
+			execute command "/sk reload %script%"
+
+
+# GUI
+function openPlayersList(p: player):
+	set {_shape::1} to "asdfghjkl"
+	set {_shape::2} to "qwertyuio"
+	set {_shape::3} to "123456789"
+	set {_shape::4} to "0_+=!~`$^"
+	set {_shape::5} to "<---.--->"
+	create a gui with virtual chest with 5 rows named "Список игроков - всего: %size of {privateserver.players::*}%" and shape {_shape::*}:
+		make gui slot "-" with black glass pane named "&7"
+		make gui slot "." with red concrete named "&aНазад":
+			if gui click type is left mouse:
+				openMenu({_p})
+
+		if {-menuPL::page::%{_p}%} is not set:	
+			set {-menuPL::page::%{_p}%} to 1
+
+		loop {privateserver.players::*}:
+			add 1 to {_loop-index}
+			set {_page} to floor({_loop-index} parsed as number/36)+1
+			add loop-value to {_list::%{_page}%::*}
+
+		loop {_list::%{-menuPL::page::%{_p}%}%::*}:
+			set {_slot} to loop-index parsed as number - 1
+			set {_looped::%{_slot}%} to loop-value
+
+			set {_head} to loop-value's skull
+
+			if {privateserver.kicked.%loop-value%} is true:
+				set {_kicked} to "&c"
+			else:
+				set {_kicked} to "&a"
+			set {_inviter} to {privateserver.invited.%loop-value%}
+
+			set {_price} to floor(distance between {_p} and loop-value / 100)
+
+			make gui slot {_slot} with {_head} with lore "&fПригласил&8: &7%{_inviter}%", "&fВпервые зашёл&8: &7%loop-value's first login formatted as "dd/MM/yyyy HH:mm:ss z"%", "&fПоследний заход&8: &7%loop-value's last login formatted as "dd/MM/yyyy HH:mm:ss z"%" and "" named "%{_kicked}%%loop-value%"
+
+		if {_page} > {-menuPL::page::%{_p}%}:
+			make gui slot ">" with map named "&aСтраница %{-menuPL::page::%{_p}%}+1%":
+				if gui click type is left mouse:
+					set {-menuPL::page::%{_p}%} to {-menuPL::page::%{_p}%}+1
+					openTeleportMenu({_p})
+		else:
+			make gui slot ">" with black glass pane named "&7"
+
+		if {-menuPL::page::%{_p}%} > 1:
+			make gui slot "<" with map named "&aСтраница %{-menuPL::page::%{_p}%}-1%":
+				if gui click type is left mouse:
+					set {-menuPL::page::%{_p}%} to {-menuPL::page::%{_p}%}-1
+					openTeleportMenu({_p})
+		else:
+			make gui slot "<" with black glass pane named "&7"
+
+	open created gui for {_p}
+	send "%{_p}% открыл меню списка игроков" to console
+
+			

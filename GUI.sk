@@ -1,0 +1,53 @@
+on swap hand items:
+	if player is sneaking:
+		cancel event
+		openMenu(player)
+
+function openMenu(p: player):
+	create a gui with virtual chest named "Меню":
+		# set {_password} to player head with nbt compound from "{SkullOwner:{Id:""85b8ad77-a45a-4351-b0c0-42f20679b73e"",Properties:{textures:[{Value:""eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvMTZhYTdmZDdlNDlhMjJiNGRhMzY1OThkYjQ3ZTZkMDBkY2VhMzY4MWViOWM3NWM0YWM5Mzk2MjBmZTg4ODIwZCJ9fX0=""}]}}}"
+
+		make gui 1 with smooth sandstone stairs with lore "  &fСесть  ", "  &aЛКМ &7- &fСесть на блок  " and ""  named colored "&r":
+			if gui click type is left mouse button:
+				execute {_p} command "/sit"
+			if gui click type is right mouse button:
+				execute {_p} command "/sit"
+		make gui 10 with white bed with lore "  &fЛечь  ", "  &aЛКМ &7- &fЛечь на блок  " and ""  named colored "&r":
+			if gui click type is left mouse button:
+				execute {_p} command "/lay"
+			if gui click type is right mouse button:
+				execute {_p} command "/lay"
+		make gui 19 with spruce trapdoor with lore "  &fПолзти  ", "  &aЛКМ &7- &fНачать ползти  " and ""  named colored "&r":
+			if gui click type is left mouse button:
+				execute {_p} command "/crawl"
+			if gui click type is right mouse button:
+				execute {_p} command "/crawl"
+
+		make gui 11 with clock with lore "  &fАФК  ", "  &aЛКМ &7- &fВключить афк  " and ""  named colored "&r":
+			if gui click type is left mouse button:
+				execute {_p} command "/afk"
+				close {_p}'s inventory
+			if gui click type is right mouse button:
+				execute {_p} command "/afk"
+				close {_p}'s inventory
+
+		make gui 4 with paper with lore "  &fСписок игроков  ", "  &aЛКМ &7- &fОткрыть список  " and ""  named colored "&r":
+			if gui click type is left mouse button:
+				openPlayersList({_p})
+			if gui click type is right mouse button:
+				openPlayersList({_p})
+		make gui 13 with writable book with lore "  &fОбъявления  ", "  &aЗабив дракона 09.09.23  ", "  &aМир начал расширение до 10к  " and ""  named colored "&r"
+		make gui 22 with anvil with lore "  &fРесурс паки  ", "  &aЛКМ &7- &fОткрыть список  ", "  &a/cmd [id]&7 - &fСменить модель предмета  " and ""  named colored "&r":
+			if gui click type is left mouse button:
+				send "Нету"
+			if gui click type is right mouse button:
+				send "Нету"
+
+		make gui 16 with compass with lore "  &fТелепорт к игрокам  ", "  &aЛКМ &7- &fОткрыть список игроков  " and ""  named colored "&r":
+			if gui click type is left mouse button:
+				openTeleportMenu({_p})
+			if gui click type is right mouse button:
+				openTeleportMenu({_p})
+
+		open created gui for {_p}
+		send "%{_p}% открыл меню" to console

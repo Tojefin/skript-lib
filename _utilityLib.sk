@@ -1,0 +1,64 @@
+on tab complete of "/sklib" or "/skriptlib":
+	set tab completions for position 1 to "help", "reload", "docs", "animation" and "version" #{{@storage}::maxPages::*}
+	if tab arg-1 = "animation":
+		set tab completions for position 2 to "scroll" and "flash"
+
+on tab complete of "/sk" or "/skript":
+	set tab completions for position 1 to "reload", "enable", "disable", "update" and "help"
+	if tab arg-1 = "reload" or "disable":
+		set tab completions for position 2 to enabled scripts
+	if tab arg-1 = "enable":
+		set tab completions for position 2 to disabled scripts
+
+on right click on any sign:
+	player has permission "sklib.sign.edit"
+	player is sneaking
+	open sign gui of target block to player
+
+command /nbt:
+	trigger:
+		send nbt compound of player's tool to player
+
+function RGBToHex(number: numbers) :: string:
+	loop {_number::*}:
+		set {_r} to join {_r}, (character at (mod((floor(min(max(loop-value, 0), 255) / 16)), 16) + 1) in "0123456789ABCDEF") and (character at ((mod(min(max(loop-value, 0), 255), 16)) + 1) in "0123456789ABCDEF")
+	return colored "<##%{_r}%>"
+
+function HexToRGB(hex: string) :: numbers:
+	replace all "##" with "" in {_hex}
+	set {_s::*} to split "0123456789abcdefklmnor" at ""
+	loop 3 times:
+		set {_n} to subtext of {_hex} from characters (loop-value -1)*2+1 to loop-value*2 in lower case
+		add (index of first element out of (split {_n} at "") in "0123456789abcdefklmnor" -1)* 16 to {_rgb::%loop-value-1%}
+		add index of 2nd element out of (split {_n} at "") in "0123456789abcdefklmnor"-1  to {_rgb::%loop-value-1%}
+	return {_rgb::*}
+
+function gradient(input: string, color: strings) :: string:
+	loop {_color::*}:
+		set {_rgb::%loop-index%::*} to HexToRGB(loop-value)
+	set {_n} to size of {_color::*} -1
+	set {_delta} to 180 / (length of uncolored {_input}/{_n} - 1)
+	loop {_n} times:
+		loop ceil(length of uncolored {_input}/{_n}) times:
+			set {_y} to ((loop-value-1) -1)*(ceil((length of uncolored {_input})/{_n})) + (loop-value-2)
+			while character at {_y}+{_x} in {_input} is "§":
+				if "abcdefklmnor0123456789" contains character at {_y}+{_x}+1 in {_input}:
+					set {_format} to (join {_format} and "&%character at {_y}+{_x}+1 in {_input}%") if character at {_y}+{_x}+1 in {_input} is not "r", else ("")
+					add 2 to {_x}
+			set {_character} to character at {_y} in uncolored {_input}
+			set {_startColorProportion} to (0.5 * (sin(({_delta}*((loop-value-2)-1))+90) + 1))
+			set {_endColorProportion} to (0.5 * (sin(({_delta}*((loop-value-2)-1))+270) + 1))
+			loop 3 times:
+				set {_n::%loop-value-3%} to ({_rgb::%loop-value-1%::%loop-value-3%} * {_startColorProportion}) + ({_rgb::%((loop-value-1) + 1)%::%loop-value-3%} * {_endColorProportion})
+			set {_output} to join {_output}, RGBToHex({_n::*}), {_format} and {_character}
+	return colored {_output}
+
+function getTimeString(a: timespan) :: string:
+    set {_form} to "%{_a}%"
+    replace all " " with "" in {_form}
+    replace all "and" with "" in {_form}
+    replace all "seconds" or "second" with "" in {_form}
+    replace all "minutes" or "minute" with ":" in {_form}
+    replace all "hours" or "hour" with ":" in {_form}
+    replace all "days" or "day" with ":" in {_form}
+    return "%{_form}%"

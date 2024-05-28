@@ -1,0 +1,38 @@
+# Необходимые аддоны
+# SkBee - https://www.spigotmc.org/resources/skbee-skript-addon.75839/
+# Для работы с NBT и рецептами
+
+# Регистрация рецепта
+on load:
+	remove recipe "tojefin:home_potion"
+	register new shaped recipe for getReturnPotion() using air, pufferfish, air, pink dye, glass bottle, lime dye, air, gunpowder and air with id "tojefin:home_potion"
+
+# Выдача рецепта
+on rightclick on a any bed:
+	unlock recipe "tojefin:home_potion" for player
+
+# Функция генирации предмета рамки
+function getReturnPotion() :: item:
+	set {_item} to potion named "&fЗелье возврата" with nbt compound from "{HideFlags:63,CustomPotionColor:3707391,isReturnPotion:1}"
+	return {_item}
+
+# Использование зелья
+on consume of potion:
+	if tool is getReturnPotion():
+		if player's world is not "world":
+			create an explosion of force 0.5 at player
+			stop
+		bed of player exists:
+			teleport player to player's bed
+		else:
+			teleport the player to player's world's spawn
+		play sound "minecraft:entity.enderman.teleport" to player
+
+# Команда
+command /homepotion [<player>]:
+	permission: "admin"
+	trigger:
+		if arg 1 is set:
+			give getReturnPotion() to arg 1
+		else:
+			give getReturnPotion() to player

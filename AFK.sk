@@ -1,0 +1,32 @@
+on join:
+	set {-afk.status.%player%} to false
+	set {-afk.location.%player%} to player's location
+
+function afkStatus(p: player, status: boolean):
+	set {-afk.location.%{_p}%} to {_p}'s location
+
+	if {-afk.status.%{_p}%} is {_status}:
+		stop
+	set {-afk.status.%{_p}%} to {_status}
+
+	if {_status} is true:
+		set {_p}'s tab list name to "%{_p}'s name% &c💤"
+	else:
+		set {_p}'s tab list name to {_p}'s name
+
+command /afk:
+	trigger:
+		afkStatus(player, true)
+
+every 60 seconds:
+	loop all players:
+		if {-afk.location.%loop-player%} is loop-player's location:
+			afkStatus(loop-player, true)
+		else:
+			afkStatus(loop-player, false)
+
+on player move:
+	if {-afk.status.%player%} is true:
+		afkStatus(player, false)
+			
+	

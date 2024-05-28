@@ -1,0 +1,20 @@
+
+on load:
+	set {-tab.template} to 1
+
+every 10 seconds:
+	if {-tab.template}+1 > 2: #Указать сколько всего шаблонов
+		set {-tab.template} to 1
+	else:
+		add 1 to {-tab.template}
+
+every 20 tick:
+	loop all players:
+		if {-tab.template} is 1:
+			set {-tab.header} to "%nl%          &7&m    &r %gradient("&lEverlasting friends", ("22c1c3", "fdbb2d"))% &7&m    &r         %nl%"
+			set {-tab.footer} to "%nl%&7ʙᴘᴇᴍя &f%now formatted as "HH:mm:ss"% &8| &7игᴘᴀют &f%count of online players%%nl%"
+		if {-tab.template} is 2:
+			set {-tab.footer} to "%nl%&7ᴛᴘs &f%tps from last 1 minute% &8| &7ᴘɪɴɢ &f%loop-player's ping%%nl%"
+
+		set loop-player's tab list header to {-tab.header}
+		set loop-player's tab list footer to {-tab.footer}

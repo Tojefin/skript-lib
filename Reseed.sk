@@ -1,0 +1,51 @@
+on block break:
+	if event-block is not wheat or beetroots or potatoes or carrots:
+		stop
+	if player's tool is not any hoe:
+		stop
+	if player's gamemode is not survival:
+		stop
+
+	#Пшеница	
+	if event-block is wheat[age=7]:
+		wait 10 tick
+		set event-block to wheat[age=0]
+		chance of 30%:
+			damage player's tool by 1
+		stop
+	if event-block is wheat[age=0]:
+		cancel event
+		stop
+
+	#Свекла
+	if event-block is beetroots[age=3]:
+		wait 10 tick
+		set event-block to beetroots[age=0]
+		chance of 30%:
+			damage player's tool by 1
+		stop
+	if event-block is beetroots[age=0]:
+		cancel event
+		stop
+
+	#Картошка
+	if event-block is potatoes[age=7]:
+		wait 10 tick
+		set event-block to potatoes[age=0]
+		chance of 30%:
+			damage player's tool by 1
+		stop
+	if event-block is potatoes[age=0]:
+		cancel event
+		stop
+
+	#Морковь
+	if event-block is carrots[age=7]:
+		wait 10 tick
+		set event-block to carrots[age=0]
+		chance of 30%:
+			damage player's tool by 1
+		stop
+	if event-block is carrots[age=0]:
+		cancel event
+		stop
